@@ -26,11 +26,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         config.setApplicationDestinationPrefixes("/app");
     }
 
+    // Cambia esto en tu archivo WebSocketConfig.java
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-workflow")
-                // Aquí también debes ser específico con la URL de Netlify
-                .setAllowedOriginPatterns("https://enterprise-diagrammer.netlify.app", "http://localhost:4200")
+                // Intenta usar setAllowedOrigins (sin Patterns) si la URL es fija
+                .setAllowedOrigins("https://enterprise-diagrammer.netlify.app", "http://localhost:4200")
                 .withSockJS();
     }
 }
