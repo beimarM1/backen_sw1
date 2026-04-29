@@ -7,7 +7,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 /**
- * Configuración CORS para permitir peticiones desde el frontend Angular (localhost:4200).
+ * Configuración CORS para permitir peticiones desde el frontend Angular
+ * (localhost:4200).
  */
 @Configuration
 public class CorsConfig {
@@ -20,7 +21,7 @@ public class CorsConfig {
         config.addAllowedOriginPattern("http://localhost:4200");
         config.addAllowedOriginPattern("http://localhost:*");
         config.addAllowedOriginPattern("https://*");
-
+        config.addAllowedOriginPattern("*"); // Permitir cualquier origen (opcional, usar con precaución)
         // Métodos HTTP permitidos
         config.addAllowedMethod("GET");
         config.addAllowedMethod("POST");
