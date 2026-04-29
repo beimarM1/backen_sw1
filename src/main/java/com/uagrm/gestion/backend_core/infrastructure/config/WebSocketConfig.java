@@ -29,10 +29,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-workflow")
-                .setAllowedOriginPatterns("*")
-                // Esto es vital para que SockJS no intente hacer cosas raras
-                // con dominios cruzados en la nube
-                .withSockJS()
-                .setClientLibraryUrl("https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js");
+                // Aquí también debes ser específico con la URL de Netlify
+                .setAllowedOriginPatterns("https://enterprise-diagrammer.netlify.app", "http://localhost:4200")
+                .withSockJS();
     }
 }

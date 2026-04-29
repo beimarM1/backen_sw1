@@ -17,26 +17,18 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Orígenes permitidos (frontend Angular y desarrollo local)
-        config.addAllowedOriginPattern("http://localhost:4200");
-        config.addAllowedOriginPattern("http://localhost:*");
-        config.addAllowedOriginPattern("https://*");
-        config.addAllowedOriginPattern("*"); // Permitir cualquier origen (opcional, usar con precaución)
-        // Métodos HTTP permitidos
-        config.addAllowedMethod("GET");
-        config.addAllowedMethod("POST");
-        config.addAllowedMethod("PUT");
-        config.addAllowedMethod("DELETE");
-        config.addAllowedMethod("OPTIONS");
-        config.addAllowedMethod("PATCH");
+        // 1. IMPORTANTE: No uses "*" si allowCredentials es true.
+        // Agrega explícitamente tu URL de Netlify y la de localhost para pruebas.
+        config.addAllowedOrigin("https://enterprise-diagrammer.netlify.app");
+        config.addAllowedOrigin("http://localhost:4200");
 
-        // Headers permitidos
+        // 2. Permitir todos los métodos y headers de forma limpia
+        config.addAllowedMethod("*");
         config.addAllowedHeader("*");
 
-        // Permitir envío de cookies/credenciales
+        // 3. Esto es lo que obliga a que los Origins sean específicos
         config.setAllowCredentials(true);
 
-        // Tiempo de cache del preflight (1 hora)
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
