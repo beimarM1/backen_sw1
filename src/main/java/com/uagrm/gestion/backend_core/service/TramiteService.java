@@ -132,7 +132,7 @@ public class TramiteService {
 
         if ("GATEWAY".equals(currentNode.getType()) || "GATEWAY_XOR".equals(currentNode.getType())
                 || "GATEWAY_AND".equals(currentNode.getType())) {
-            nextNodeId = evaluarGateways(outgoingEdges, tramite);
+            nextNodeId = evaluarGateways(outgoingEdges, tramite, workflow);
         } else {
             // Flujo lineal
             nextNodeId = outgoingEdges.get(0).getTargetId();
@@ -198,7 +198,7 @@ public class TramiteService {
         // Si no es automático por tipo, pero tiene una condición que se cumple, lo
         // volvemos automático.
         if (!esAutomatico && currentNode.getAutoCondition() != null && !currentNode.getAutoCondition().isEmpty()) {
-            if (evaluarCondicionUnica(currentNode.getAutoCondition(), tramite)) {
+            if (evaluarCondicionUnica(currentNode.getAutoCondition(), tramite, workflow)) {
                 log.info("Auto-procesado activado por condición: '{}'", currentNode.getAutoCondition());
                 esAutomatico = true; // Aquí solo REASIGNAMOS el valor, no declaramos la variable otra vez.
             }
@@ -214,38 +214,18 @@ public class TramiteService {
         }
     }
 
-    private boolean evaluarCondicionUnica(String condicion, Tramite tramite) {
-        if (condicion == null || condicion.isEmpty())
-            return false;
-        try {
-            ExpressionParser parser = new SpelExpressionParser();
-            StandardEvaluationContext context = new StandardEvaluationContext();
-            Map<String, Object> dataMap = new HashMap<>();
-            tramite.getFormData().forEach(d -> dataMap.put(d.getFieldId().replace("-", "_"), d.getValue()));
-            context.setVariables(dataMap);
-            Boolean result = parser.parseExpression(condicion).getValue(context, Boolean.class);
-            return result != null && result;
-        } catch (Exception e) {
-            log.error("Error evaluando autoCondition: {}. Error: {}", condicion, e.getMessage());
-            return false;
-        }
-    }
-
-    private String evaluarGateways(List<WorkflowEdge> edges, Tramite tramite) {
+    private String evaluarGateways(List<WorkflowEdge> edges, Tramite tramite, WorkflowDefinition workflow) {
         ExpressionParser parser = new SpelExpressionParser();
         StandardEvaluationContext context = new StandardEvaluationContext();
 
-        // El contexto de evaluación son los datos del trámite
-        // Se reemplazan los guiones por guiones bajos porque SpEL no admite guiones en
-        // nombres de variables
-        Map<String, Object> dataMap = new HashMap<>();
-        tramite.getFormData().forEach(d -> dataMap.put(d.getFieldId().replace("-", "_"), d.getValue()));
+        // Usamos nuestro nuevo método súper vitaminado
+        Map<String, Object> dataMap = construirContextoDatos(tramite, workflow);
         context.setVariables(dataMap);
 
-        log.info("GATEWAY DATAMAP: {}", dataMap);
+        log.info("GATEWAY DATAMAP NORMALIZADO: {}", dataMap);
 
         for (WorkflowEdge edge : edges) {
-            if (edge.getCondition() == null || edge.getCondition().isEmpty()) {
+            if (edge.getCondition() == null || edge.getCondition().trim().isEmpty()) {
                 log.info("GATEWAY: path por defecto a {}", edge.getTargetId());
                 return edge.getTargetId(); // Default path
             }
@@ -260,6 +240,25 @@ public class TramiteService {
             }
         }
         return null;
+    }
+
+    private boolean evaluarCondicionUnica(String condicion, Tramite tramite, WorkflowDefinition workflow) {
+        if (condicion == null || condicion.trim().isEmpty())
+            return false;
+        try {
+            ExpressionParser parser = new SpelExpressionParser();
+            StandardEvaluationContext context = new StandardEvaluationContext();
+
+            // Usamos el mismo método aquí
+            Map<String, Object> dataMap = construirContextoDatos(tramite, workflow);
+            context.setVariables(dataMap);
+
+            Boolean result = parser.parseExpression(condicion).getValue(context, Boolean.class);
+            return result != null && result;
+        } catch (Exception e) {
+            log.error("Error evaluando autoCondition: {}. Error: {}", condicion, e.getMessage());
+            return false;
+        }
     }
 
     private void actualizarDatos(Tramite tramite, Map<String, Object> data) {
@@ -372,4 +371,35 @@ public class TramiteService {
 
         return stats;
     }
+
+    private Map<String, Object> construirContextoDatos(Tramite tramite, WorkflowDefinition workflow) {
+        Map<String, Object> dataMap = new HashMap<>();
+
+        // 1. Mapeo original por ID técnico (ej: f_1777909002464)
+        tramite.getFormData().forEach(d -> {
+            Object value = d.getValue();
+            // Limpiamos espacios en blanco por seguridad (muy útil en evaluaciones SpEL)
+            if (value instanceof String) {
+                value = ((String) value).trim();
+            }
+            dataMap.put(d.getFieldId().replace("-", "_"), value);
+        });
+
+        // 2. Mapeo inteligente por Label
+        if (workflow != null && workflow.getNodes() != null) {
+            workflow.getNodes().stream()
+                    .filter(n -> n.getForm() != null && n.getForm().getFields() != null)
+                    .flatMap(n -> n.getForm().getFields().stream())
+                    .forEach(field -> {
+                        Object value = dataMap.get(field.getId().replace("-", "_"));
+                        if (value != null && field.getLabel() != null) {
+                            // Normalizamos el label (ej: "Esta Completo" -> "estacompleto")
+                            String labelNormalizado = field.getLabel().trim().toLowerCase().replace(" ", "");
+                            dataMap.put(labelNormalizado, value);
+                        }
+                    });
+        }
+        return dataMap;
+    }
+
 }
