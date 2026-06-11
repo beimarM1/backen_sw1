@@ -110,6 +110,14 @@ public class TramiteService {
         return tramiteRepository.save(tramite);
     }
 
+    public Tramite actualizarFormData(String tramiteId, Map<String, Object> data) {
+        Tramite tramite = tramiteRepository.findById(tramiteId)
+                .orElseThrow(() -> new RuntimeException("Trámite no encontrado"));
+        actualizarDatos(tramite, data);
+        tramite.setLastUpdateAt(LocalDateTime.now());
+        return tramiteRepository.save(tramite);
+    }
+
     private void avanzarFlujo(Tramite tramite, WorkflowDefinition workflow) {
         String currentNodeId = tramite.getCurrentStepId();
 
@@ -151,9 +159,11 @@ public class TramiteService {
                         if (node.getPriority() != null) {
                             tramite.setPriority(node.getPriority());
                         }
+                        log.info("Trámite {} avanzó al nodo {}. Detalle completo del nodo destino: {}", 
+                                tramite.getId() != null ? tramite.getId() : "null", 
+                                finalNextNodeId, 
+                                node);
                     });
-
-            log.info("Trámite {} avanzó al nodo {}", tramite.getId(), nextNodeId);
 
             // Notificar vía WebSocket si requiere rol humano (para bandeja)
             if (tramite.getCurrentAssignedRole() != null) {
@@ -206,7 +216,8 @@ public class TramiteService {
 
         // 3. Ejecución del avance
         if (esAutomatico) {
-            log.info("Avance automático en nodo '{}' tipo '{}'", currentNode.getLabel(), type);
+            log.info("Avance automático en nodo '{}' tipo '{}'. Detalle completo del nodo: {}", 
+                    currentNode.getLabel(), type, currentNode);
             avanzarFlujo(tramite, workflow);
 
             // Actualizar el responsable después de mover el trámite al siguiente nodo

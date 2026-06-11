@@ -37,6 +37,11 @@ public class TramiteController {
         return ResponseEntity.ok(tramiteService.completarTarea(request.getTramiteId(), request.getData()));
     }
 
+    @PostMapping("/{id}/form-data")
+    public ResponseEntity<Tramite> actualizarFormData(@PathVariable String id, @RequestBody Map<String, Object> data) {
+        return ResponseEntity.ok(tramiteService.actualizarFormData(id, data));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Tramite> obtenerPorId(@PathVariable String id) {
         return tramiteService.obtenerPorId(id)

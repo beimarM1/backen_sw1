@@ -28,10 +28,11 @@ public class WorkflowDefinition {
     private boolean active;
     @Builder.Default
     private boolean deleted = false;
-    
-    // El diagrama se almacena como un mapa para flexibilidad JSON (compatible con BPMN 2.0 en su estructura lógica)
+
+    // El diagrama se almacena como un mapa para flexibilidad JSON (compatible con
+    // BPMN 2.0 en su estructura lógica)
     private Map<String, Object> diagramJson;
-    
+
     private LocalDateTime createdAt;
     private String createdBy;
 
@@ -65,7 +66,10 @@ public class WorkflowDefinition {
     public static class WorkflowNode {
         private String id;
         private String label;
-        /** START | END | TASK | SERVICE | GATEWAY_XOR | GATEWAY_AND | AGENT | TIMER | MAIL */
+        /**
+         * START | END | TASK | SERVICE | GATEWAY_XOR | GATEWAY_AND | AGENT | TIMER |
+         * MAIL
+         */
         private String type;
         private String assignedRole;
         private String priority; // LOW, MEDIUM, HIGH, URGENT
@@ -91,12 +95,18 @@ public class WorkflowDefinition {
     public static class FormField {
         private String id;
         private String label;
-        /** text | number | date | select | textarea | file | checkbox */
+        /** text | number | date | select | textarea | file | checkbox | grid */
         private String type;
         private boolean required;
         private String placeholder;
         private List<String> options; // Para tipo 'select'
         private Object defaultValue;
+        private List<GridColumn> gridColumns;
+        /**
+         * Nivel de permiso de acceso al documento adjunto en este paso del flujo.
+         * Valores: NONE | READ | UPLOAD | WRITE
+         */
+        private String permission;
     }
 
     @Data
@@ -108,5 +118,17 @@ public class WorkflowDefinition {
         private String targetId;
         private String condition;
         private String label;
+        private Double offsetX; // Desplazamiento horizontal del handle (persistido)
+        private Double offsetY; // Desplazamiento vertical del handle (persistido)
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GridColumn {
+        private String id;
+        private String label;
+        private String type;
+    }
+
 }

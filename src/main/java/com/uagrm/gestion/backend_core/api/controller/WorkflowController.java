@@ -1,6 +1,5 @@
 package com.uagrm.gestion.backend_core.api.controller;
 
-import com.uagrm.gestion.backend_core.domain.enums.UserRole;
 import com.uagrm.gestion.backend_core.domain.model.WorkflowDefinition;
 import com.uagrm.gestion.backend_core.service.WorkflowService;
 import lombok.RequiredArgsConstructor;

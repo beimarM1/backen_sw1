@@ -8,11 +8,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectEvent;
+//import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.web.socket.messaging.SessionConnectedEvent; // Asegúrate de cambiar el import
 
 @Component
 @Slf4j
@@ -21,14 +21,27 @@ public class WebSocketEventListener {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final Set<String> activeSessions = ConcurrentHashMap.newKeySet();
+    /*
+     * @EventListener
+     * public void handleConnect(SessionConnectEvent event) {
+     * StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+     * String sessionId = accessor.getSessionId();
+     * if (sessionId != null) {
+     * activeSessions.add(sessionId);
+     * log.info("WebSocket CONNECT | sessionId={} | total={}", sessionId,
+     * activeSessions.size());
+     * broadcastPresence();
+     * }
+     * }
+     */
 
     @EventListener
-    public void handleConnect(SessionConnectEvent event) {
+    public void handleConnected(SessionConnectedEvent event) { // Cambiado aquí
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = accessor.getSessionId();
         if (sessionId != null) {
             activeSessions.add(sessionId);
-            log.info("WebSocket CONNECT | sessionId={} | total={}", sessionId, activeSessions.size());
+            log.info("WebSocket CONNECTED | sessionId={} | total={}", sessionId, activeSessions.size());
             broadcastPresence();
         }
     }

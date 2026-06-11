@@ -10,7 +10,8 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
 /**
- * Controlador de WebSockets para manejar la edición colaborativa en tiempo real.
+ * Controlador de WebSockets para manejar la edición colaborativa en tiempo
+ * real.
  */
 @Controller
 @Slf4j
@@ -20,22 +21,25 @@ public class WorkflowWSController {
     private final WorkflowService workflowService;
 
     /**
-     * Recibe actualizaciones de diagrama de un cliente y las retransmite a todos los suscritos.
+     * Recibe actualizaciones de diagrama de un cliente y las retransmite a todos
+     * los suscritos.
      * Endpoint de envío: /app/workflow/{workflowId}/update
      * Canal de suscripción: /topic/workflow/{workflowId}
      */
     @MessageMapping("/workflow/{workflowId}/update")
     @SendTo("/topic/workflow/{workflowId}")
     public WorkflowUpdateDTO handleWorkflowUpdate(
-            @DestinationVariable String workflowId, 
+            @DestinationVariable String workflowId,
             WorkflowUpdateDTO message) {
-        
-        log.info("Recibida actualización de workflow {} de usuario {}: {}", workflowId, message.getUserId(), message.getType());
-        
+
+        log.info("Recibida actualización de workflow {} de usuario {}: {}", workflowId, message.getUserId(),
+                message.getType());
+
         // Aplicar persistencia parcial (Opcional, según carga del sistema)
         workflowService.aplicarActualizacionParcial(workflowId, message.getPayload());
-        
-        // El mensaje se retransmite automáticamente a todos los suscritos al canal definido en @SendTo
+
+        // El mensaje se retransmite automáticamente a todos los suscritos al canal
+        // definido en @SendTo
         return message;
     }
 }
